@@ -5,7 +5,6 @@ import {OrbitControls} from "three/addons/controls/OrbitControls.js";
 import {TrackballControls} from "three/addons/controls/TrackballControls.js";
 import {OBJLoader} from "three/addons/loaders/OBJLoader.js";
 
-
 // Initialize webGL
 const canvas = document.getElementById("mycanvas");
 const renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true});
@@ -21,7 +20,7 @@ const camera = new THREE.PerspectiveCamera(50, canvas.width / canvas.height,
                                             0.1, 1000);
 camera.position.x =15;
 camera.position.z =0;
-camera.position.y =10;
+camera.position.y =5;
 
 window.addEventListener("resize", function() {
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -51,35 +50,30 @@ const groundX = 100;
 const groundZ = 100;
 
 const groundMesh = new THREE.Mesh( new THREE.PlaneGeometry( groundX, groundZ), 
-                                   new THREE.MeshStandardMaterial({
-                                                                   color: 'white',
-                                                                   emissive: '#808080',
-                                                                   emissiveIntensity: 0.2,
-                                                                   transparent: false,
-                                                                   opacity: 0.8}));
+                                   new THREE.MeshStandardMaterial({color: '#bbbbbb',
+                                                                    emissive: '#808080',
+                                                                    emissiveIntensity: 0.4}));
 
 groundMesh.rotation.x = -Math.PI/2;
 groundMesh.receiveShadow = true;
 scene.add( groundMesh );
 
-/******field******************************************************************************************************************/
+/**********************************************field**********************************************************************************/
 const fieldSide = 12;
 
 const fieldTexture = txtLoader.load('resources/FloorsCheckerboard_S_Diffuse.jpg');
 fieldTexture.wrapS = THREE.RepeatWrapping;  // wrap mode in u-direction
 fieldTexture.wrapT = THREE.RepeatWrapping;  // wrap mode in v-direction
 fieldTexture.repeat.set(2,2);
-fieldTexture.magFilter = THREE.LinearMipmapLinearFilter;
-const normalMap = txtLoader.load('resources/FloorsCheckerboard_S_Normal.jpg');
-normalMap.wrapS = THREE.RepeatWrapping;  // wrap mode in u-direction
-normalMap.wrapT = THREE.RepeatWrapping;  // wrap mode in v-direction
-normalMap.repeat.set(2,2);
-normalMap.magFilter = THREE.LinearMipmapLinearFilter;
+const bumpMap = txtLoader.load('resources/FloorsCheckerboard_S_Normal.jpg');
+bumpMap.wrapS = THREE.RepeatWrapping;  // wrap mode in u-direction
+bumpMap.wrapT = THREE.RepeatWrapping;  // wrap mode in v-direction
+bumpMap.repeat.set(2,2);
 const fieldGeo = new THREE.PlaneGeometry(fieldSide,fieldSide);
 const fieldMesh = new THREE.Mesh(fieldGeo,
                                  new THREE.MeshPhongMaterial({color: "#bbbbbb",
                                                                  map: fieldTexture,
-                                                                 bumpMap: normalMap,
+                                                                 bumpMap: bumpMap,
                                                                  bumpScale: 0.2,
                                                                  transparent: true,
                                                                  opacity: 0.9,
@@ -90,7 +84,7 @@ fieldMesh.rotation.x = Math.PI/2;
 fieldMesh.position.set(0,0.1,0);
 scene.add(fieldMesh);
 
-//------walls----------
+//----------------------------walls----------
 const cushionWidth = 0.2;
 const cushionHeight = 12.5;
 const cushionDepth = 1;
@@ -99,9 +93,7 @@ const cushionsTexture = txtLoader.load('resources/hardwood2_diffuse.jpg');
 cushionsTexture.wrapS = THREE.RepeatWrapping;  // wrap mode in u-direction
 cushionsTexture.wrapT = THREE.RepeatWrapping;  // wrap mode in v-direction
 cushionsTexture.repeat.set(3,3);
-cushionsTexture.magFilter = THREE.LinearMipmapLinearFilter;
 const wallBump = txtLoader.load('resources/hardwood2_bump.jpg');
-wallBump.magFilter = THREE.LinearMipmapLinearFilter;
 //top and bottom
 const cushionsT_B =[
                     {x: 6.1, y:yValue, z: 0},
@@ -120,6 +112,7 @@ for (let i=0; i<cushionsT_B.length; i++){
   cushionMeshA.castShadow = true;
   cushionMeshA.receiveShadow = true;
   scene.add(cushionMeshA);
+  cushionMeshA.magFilter = THREE.LinearMipmapLinearFilter;
 }
 //left and right
 const cushionsL_R =[
@@ -168,8 +161,8 @@ const snakeY = (blockSize * 0.95);
 const snakeZ = (blockSize * 0.95);
 
 const headGeo = new THREE.BoxGeometry( snakeX, snakeY, snakeZ); 
-const headMat = new THREE.MeshBasicMaterial( {color: 0x008000,
-                                               map: snakeTexture}); 
+const headMat = new THREE.MeshPhongMaterial( {color: 0x008000,
+                                              map: snakeTexture}); 
 const snakeHead = new THREE.Mesh( headGeo, headMat ); 
 
 scene.add(snakeHead);
@@ -181,7 +174,7 @@ function placeHead() {
   const headX = Math.floor(Math.random() * fieldSide - fieldSide / 2) * blockSize + blockSize / 2;
   const headZ = Math.floor(Math.random() * fieldSide - fieldSide / 2) * blockSize + blockSize / 2;
   
-  snakeHead.position.set(headX, 0.5, headZ);
+  snakeHead.position.set(headX, 0.59, headZ);
 }
 placeHead();
 /********************************APPLE******************************************************************* */
@@ -189,18 +182,18 @@ const scaleFact = 0.01;
 let appleObj;
 const loader = new OBJLoader();
 
-
-txtLoader.load('resources/Apple_BaseColor.png', function (texture) {
+txtLoader.load('resources/Apple_BaseColor.png', function (textureApple) {
       // Load the normal map
         txtLoader.load('resources/Apple_Normal.png', function (normalMap) {
                 // Load the specular map
                 txtLoader.load('resources/Apple_Roughness.png', function (specularMap) {
                         // Set up material with the loaded texture, normal map, and specular map
-                        const material = new THREE.MeshStandardMaterial({ 
-                            map: texture,
+                        const material = new THREE.MeshPhongMaterial({ 
+                            map: textureApple,
                             normalMap: normalMap,
                             specularMap: specularMap,
-                        });
+                            specular:'#ffff00',
+                            shininess: 4 });
                         // Load the OBJ file
                         loader.load('resources/Apple.obj', function (object) {
                                 // Apply the material with the texture to the object
@@ -210,58 +203,12 @@ txtLoader.load('resources/Apple_BaseColor.png', function (texture) {
                                         child.material = material;
                                     }
                                 });
-                                //scale the Apple
-                                //object.scale.set(ScaleFact, ScaleFact, ScaleFact);
-                                //randomly place the apple on the field
-                                /* foodX = (Math.floor(Math.random() * fieldSide - fieldSide / 2) + blockSize / 2) * blockSize;
-                                foodZ = (Math.floor(Math.random() * fieldSide - fieldSide / 2) + blockSize / 2) * blockSize; */
-                                //object.position.set(foodX, 0.5, foodZ);
-                                //placeFood();
-                                //scene.add(object);
-                                //loadedObjectPosition = object.position.clone();
-                                //placeFood(object);  
                                 appleObj = object;
                                 placeFood();
-                            },
-                            function (xhr) {
-                                // Progress callback
-                                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-                            },
-                            function (error) {
-                                // Error callback
-                                console.error('Error loading OBJ file:', error);
-                            }
-                        );
-                    },
-                    function (xhr) {
-                        // Progress callback for specular map loading
-                        console.log((xhr.loaded / xhr.total * 100) + '% specular map loaded');
-                    },
-                    function (error) {
-                        // Error callback for specular map loading
-                        console.error('Error loading specular map:', error);
-                    }
-                );
-            },
-            function (xhr) {
-                // Progress callback for normal map loading
-                console.log((xhr.loaded / xhr.total * 100) + '% normal map loaded');
-            },
-            function (error) {
-                // Error callback for normal map loading
-                console.error('Error loading normal map:', error);
-            }
-        );
-    },
-    function (xhr) {
-        // Progress callback for texture loading
-        console.log((xhr.loaded / xhr.total * 100) + '% texture loaded');
-    },
-    function (error) {
-        // Error callback for texture loading
-        console.error('Error loading texture:', error);
-    }
-); 
+                            });
+                    });
+            });
+    }); 
 
 function placeFood() {
   let foodX;
@@ -273,11 +220,8 @@ function placeFood() {
   
   appleObj.scale.set(scaleFact,scaleFact,scaleFact);
   appleObj.position.set(foodX, 0.49, foodZ);
-  //appleObj.castShadow = true;
   scene.add(appleObj);
 }
-
-
 //check if the cells are occupied by snake and find an empty cell to place the food
 function findFreeCell(x, y) {//check collision with snakeHead
   const headPosition = snakeHead.position;
@@ -312,7 +256,6 @@ function moveSnake() {
   if (appleObj && prevHeadPosition.distanceTo(appleObj.position) < 0.5) {
     eatBallSound.play();
     snakeTail();
-    //scene.remove(appleObj); 
     placeFood();
     
   }
@@ -325,7 +268,7 @@ function moveSnake() {
     checkSelfCollision()
   ) {
     gameOverSound.play();
-    alert("OH NoOo, You killed me! I was still hungry: " + snakeBody.length);
+    alert("Game Over! your Score: " + snakeBody.length);
     updateGame();
   }
   // Update body parts to attach and follow the head
@@ -346,15 +289,12 @@ function checkSelfCollision() {
   }
   return false;
 }
-
 /*************************************Add snakeBody************************************************************** */
 function snakeTail() {
   
   const tailGeo = new THREE.BoxGeometry(snakeX, snakeY, snakeZ);
-  const tailMat = new THREE.MeshStandardMaterial({color: 'pink',
-                                                  map: snakeTexture,
-                                                  transparent: true,
-                                                  opacity: 0.9});
+  const tailMat = new THREE.MeshStandardMaterial({color: '#00ffff',
+                                                  map: snakeTexture});
   const newBodyPart = new THREE.Mesh(tailGeo, tailMat);
   newBodyPart.castShadow = true;
   newBodyPart.position.copy(prevHeadPosition); //use the previous position of the head for the body
@@ -393,44 +333,64 @@ function updateGame() {
 }
 // Set interval for snake movement
 setInterval(moveSnake, 250);
+
+/*********************************Screen base**************************** */
+const baseX = 0.5;
+const baseY = 9;
+const baseZ = 6;
+const baseMesh = new THREE.Mesh(new THREE.BoxGeometry (baseX, baseY, baseZ),
+                                 new THREE.MeshStandardMaterial({color: '#000000',
+                                                                 side: THREE.DoubleSide}));
+
+baseMesh.rotation.x = Math.PI/2;
+baseMesh.castShadow = true;
+baseMesh.position.set(-7.45, 3, 0);
+scene.add(baseMesh);
 /**************************************Screen**********************************************************************/
-const screenX = 15;
-const screenZ = 4;
+const screenX = 10;
+const screenY = 4;
 
 const rtHeight = 512;
 const rtWidth = 512;
 const rt = new THREE.WebGLRenderTarget(rtWidth, rtHeight);
 
-const screenMesh = new THREE.Mesh( new THREE.PlaneGeometry( screenX, screenZ), 
-                                   new THREE.MeshPhongMaterial({color: '#bbbbbb',
-                                                                 map: rt.texture}));
+const screenMesh = new THREE.Mesh( new THREE.PlaneGeometry( screenX, screenY), 
+                                   new THREE.MeshStandardMaterial({color: '#bbbbbb',
+                                                                 map: rt.texture,
+                                                                 side: THREE.FrontSide}));
 
 screenMesh.rotation.y = Math.PI/2;
 screenMesh.castShadow = true;
-screenMesh.position.set(-10, 2.5, 0);
+screenMesh.position.set(-7, 3.5, 0);
 scene.add( screenMesh );
 screenMesh.material.needsUpdate = true;
 
-const rtCamera = new THREE.PerspectiveCamera(90, rt.width / rt.height,
-                                             0.1, 1000);
-rtCamera.position.copy(snakeHead.position);  
+const rtCamera = new THREE.PerspectiveCamera(100, rtWidth / rtHeight, 0.1, 1000);
+rtCamera.position.copy(snakeHead.position); 
+
 /************************************Renderer***************************************** */
 const controls = new OrbitControls( camera, canvas );
-//const controlsb = new TrackballControls(rtCamera, renderer.domElement);
+const controlsb = new TrackballControls(rtCamera, renderer.domElement);
+
 function render() {
   requestAnimationFrame(render);
-  
+
+  rtCamera.position.copy(snakeHead.position); 
+  // Calculate the target position for the camera to look at
+  const targetPosition = new THREE.Vector3().copy(snakeHead.position).add(speed);
+
+  // Orient the camera towards the target position
+  rtCamera.lookAt(targetPosition);
+
   renderer.setRenderTarget(rt);
   renderer.render(scene, rtCamera);
 
   renderer.setRenderTarget(null);
   renderer.render(scene, camera);
 
-  controls.update();
-  //controlsb.update();
+  controls.update(); 
   
 }
-
 render();
 
 
